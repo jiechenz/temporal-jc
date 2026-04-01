@@ -49,3 +49,5 @@ history.enableChasm:
   - value: true
 activity.enableStandalone:
   - value: true
+history.enableDeleteWorkflowExecutionReplication:
+  - value: true

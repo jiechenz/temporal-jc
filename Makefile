@@ -607,7 +607,40 @@ install-schema-es-secondary: temporal-elasticsearch-tool
 	./temporal-elasticsearch-tool -ep http://127.0.0.1:8200 setup-schema
 	./temporal-elasticsearch-tool -ep http://127.0.0.1:8200 create-index --index temporal_visibility_v1_secondary
 
-install-schema-xdc: temporal-cassandra-tool temporal-elasticsearch-tool
+# Run xdc with postgreSQL
+install-schema-postgresql-xdc: temporal-sql-tool temporal-elasticsearch-tool
+	@printf $(COLOR) "Install Postgres schema..."
+	./temporal-sql-tool -u $(SQL_USER) --pw $(SQL_PASSWORD) -p 5432 --pl postgres12 --db temporal_cluster_jc_a drop -f
+	./temporal-sql-tool -u $(SQL_USER) --pw $(SQL_PASSWORD) -p 5432 --pl postgres12 --db temporal_cluster_jc_a create
+	./temporal-sql-tool -u $(SQL_USER) --pw $(SQL_PASSWORD) -p 5432 --pl postgres12 --db temporal_cluster_jc_a setup -v 0.0
+	./temporal-sql-tool -u $(SQL_USER) --pw $(SQL_PASSWORD) -p 5432 --pl postgres12 --db temporal_cluster_jc_a update-schema -d ./schema/postgresql/v12/temporal/versioned
+
+	@printf $(COLOR) "Install Postgres schema..."
+	./temporal-sql-tool -u $(SQL_USER) --pw $(SQL_PASSWORD) -p 5432 --pl postgres12 --db temporal_cluster_jc_b drop -f
+	./temporal-sql-tool -u $(SQL_USER) --pw $(SQL_PASSWORD) -p 5432 --pl postgres12 --db temporal_cluster_jc_b create
+	./temporal-sql-tool -u $(SQL_USER) --pw $(SQL_PASSWORD) -p 5432 --pl postgres12 --db temporal_cluster_jc_b setup -v 0.0
+	./temporal-sql-tool -u $(SQL_USER) --pw $(SQL_PASSWORD) -p 5432 --pl postgres12 --db temporal_cluster_jc_b update-schema -d ./schema/postgresql/v12/temporal/versioned
+
+	@printf $(COLOR) "Install Postgres schema..."
+	./temporal-sql-tool -u $(SQL_USER) --pw $(SQL_PASSWORD) -p 5432 --pl postgres12 --db temporal_cluster_jc_c drop -f
+	./temporal-sql-tool -u $(SQL_USER) --pw $(SQL_PASSWORD) -p 5432 --pl postgres12 --db temporal_cluster_jc_c create
+	./temporal-sql-tool -u $(SQL_USER) --pw $(SQL_PASSWORD) -p 5432 --pl postgres12 --db temporal_cluster_jc_c setup -v 0.0
+	./temporal-sql-tool -u $(SQL_USER) --pw $(SQL_PASSWORD) -p 5432 --pl postgres12 --db temporal_cluster_jc_c update-schema -d ./schema/postgresql/v12/temporal/versioned
+
+	@printf $(COLOR) "Install Elasticsearch schemas..."
+	./temporal-elasticsearch-tool -ep http://127.0.0.1:9200 setup-schema
+# Delete indices if they exist (drop-index fails silently if index doesn't exist)
+	./temporal-elasticsearch-tool -ep http://127.0.0.1:9200 drop-index --index temporal_visibility_v1_dev_cluster_a --fail
+	./temporal-elasticsearch-tool -ep http://127.0.0.1:9200 drop-index --index temporal_visibility_v1_dev_cluster_b --fail
+	./temporal-elasticsearch-tool -ep http://127.0.0.1:9200 drop-index --index temporal_visibility_v1_dev_cluster_c --fail
+# Create indices
+	./temporal-elasticsearch-tool -ep http://127.0.0.1:9200 create-index --index temporal_visibility_v1_dev_cluster_a
+	./temporal-elasticsearch-tool -ep http://127.0.0.1:9200 create-index --index temporal_visibility_v1_dev_cluster_b
+	./temporal-elasticsearch-tool -ep http://127.0.0.1:9200 create-index --index temporal_visibility_v1_dev_cluster_c
+
+install-schema-xdc: install-schema-postgresql-xdc
+
+install-schema-cass-xdc: temporal-cassandra-tool temporal-elasticsearch-tool
 	@printf $(COLOR)  "Install Cassandra schema (active)..."
 	./temporal-cassandra-tool drop -k temporal_cluster_a -f
 	./temporal-cassandra-tool create -k temporal_cluster_a --rf 1

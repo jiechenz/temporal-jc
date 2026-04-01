@@ -3,14 +3,21 @@ log:
   level: info
 
 persistence:
-  defaultStore: cass-default
+  defaultStore: postgres-default
   visibilityStore: es-visibility
   numHistoryShards: 32
   datastores:
-    cass-default:
-      cassandra:
-        hosts: "127.0.0.1"
-        keyspace: "temporal_cluster_c"
+    postgres-default:
+      sql:
+        pluginName: "postgres12"
+        databaseName: "temporal_cluster_jc_c"
+        connectAddr: "127.0.0.1:5432"
+        connectProtocol: "tcp"
+        user: "temporal"
+        password: "temporal"
+        maxConns: 20
+        maxIdleConns: 20
+        maxConnLifetime: "1h"
     es-visibility:
       elasticsearch:
         version: "v7"
